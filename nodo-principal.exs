@@ -4,14 +4,6 @@ defmodule NodoCliente do
   @nodo_remoto :nodoservidor@servidor
   @servicio_remoto {:servicio_cadenas, @nodo_remoto}
 
-  # Lista de mensajes a procesar
-
-  @mensajes [
-    {:mayusculas, "Juan"}, {:mayusculas, "Ana"},
-    {:minusculas, "Diana"}, {&String.reverse/1, "Julián"},
-    "Uniquindio", :fin
-  ]
-
   def main() do
     Util.mostrar_mensaje("PROCESO PRINCIPAL")
     @nombre_servicio_local
@@ -25,7 +17,7 @@ defmodule NodoCliente do
   end
 
   defp establecer_conexion(nodo_remoto) do
-    Nodo.connect(nodo_remoto)
+    Node.connect(nodo_remoto)
   end
 
   defp iniciar_produccion(false) do
@@ -38,19 +30,31 @@ defmodule NodoCliente do
   end
 
   defp enviar_mensajes() do
-    Enum.each(@mensajes,&enviar_mesaje/1)
+    loop_enviar_mensajes()
   end
 
-  defp enviar_mesaje(mensaje) do
-    send(@servicio_remoto, {@servicio_local, mensaje})
+  defp loop_enviar_mensajes() do
+    mensaje = Util.ingresar("Ingrese un mensaje (o escriba 'fin' para terminar):", :texto)
+
+    case mensaje do
+      "fin" ->
+        send(@servicio_remoto, {@servicio_local, :fin})
+        Util.mostrar_mensaje("Chat finalizado.")
+
+      _ ->
+        send(@servicio_remoto, {@servicio_local, {:texto, mensaje}})
+        loop_enviar_mensajes()
+    end
   end
 
   defp recibir_respuestas() do
     receive do
       :fin ->
         :ok
-    respuesta ->
-      Util.mostrar_mensaje("\t->\"#{respuesta}\"")
+
+      respuesta ->
+        Util.mostrar_mensaje("\t->\"#{respuesta}\"")
+        recibir_respuestas()
     end
   end
 end

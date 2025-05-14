@@ -13,18 +13,22 @@ defmodule NodoServidor do
 
   defp procesar_mensajes() do
     receive do
+      {productor, :fin} ->
+        Util.mostrar_mensaje("El cliente ha finalizado la conexión.")
+        send(productor, :fin)
+
       {productor, mensaje} ->
-        respuesta  = procesar_mensaje(mensaje)
+        respuesta = procesar_mensaje(mensaje)
         send(productor, respuesta)
-      if respuesta != :fin, do: procesar_mensajes()
+        procesar_mensajes() # Continúa escuchando mensajes
     end
   end
 
-    defp procesar_mensaje(:fin), do: :fin
-    defp procesar_mensaje({:mayusculas, msg}, do: String.upcase(msg))
-    defp procesar_mensaje({:minusculas, msg}, do: String.downcase(msg))
-    defp procesar_mensaje({funcion, msg}) when is_function(funcion, 1), do: funcion.(msg)
-    defp procesar_mensaje(mensaje), do: " El mensaje \"#{mensaje}\" es desconocido"
-  end
+  defp procesar_mensaje(:fin), do: :fin
+  defp procesar_mensaje({:mayusculas, msg}), do: String.upcase(msg)
+  defp procesar_mensaje({:minusculas, msg}), do: String.downcase(msg)
+  defp procesar_mensaje({funcion, msg}) when is_function(funcion, 1), do: funcion.(msg)
+  defp procesar_mensaje(mensaje), do: "El mensaje \"#{mensaje}\" es desconocido"
+end
 
-  NodoServidor.main()
+NodoServidor.main()
