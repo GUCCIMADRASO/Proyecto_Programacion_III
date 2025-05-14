@@ -1,7 +1,7 @@
 defmodule NodoCliente do
   @nombre_servicio_local :servicio_respuesta
   @servicio_local {@nombre_servicio_local, :nodocliente@cliente}
-  @nodo_remoto :nodoservidor@localhost
+  @nodo_remoto :nodoservidor@servidor
   @servicio_remoto {:servicio_cadenas, @nodo_remoto}
 
   # Lista de mensajes a procesar
