@@ -5,23 +5,23 @@ defmodule Chat do
 
   # Aquí se expondrán las funciones de alto nivel para el cliente y pruebas
 
-  def start do
-    Auth.start_link()
-    ChatSupervisor.start_link(nil)
+  def iniciar do
+    Autenticacion.iniciar_enlace()
+    SupervisorChat.iniciar_enlace(nil)
   end
 end
 
-defmodule Chat.Application do
+defmodule Chat.Aplicacion do
   use Application
 
-  def start(_type, _args) do
-    children = [
-      {Registry, keys: :unique, name: ChatRoomRegistry},
-      {Registry, keys: :unique, name: UserSessionRegistry},
-      {Task, fn -> Auth.start_link() end},
-      ChatSupervisor
+  def start(_tipo, _args) do
+    hijos = [
+      {Registry, keys: :unique, name: RegistroSalaChat},
+      {Registry, keys: :unique, name: RegistroSesionUsuario},
+      {Task, fn -> Autenticacion.iniciar_enlace() end},
+      SupervisorChat
     ]
-    opts = [strategy: :one_for_one, name: Chat.MainSupervisor]
-    Supervisor.start_link(children, opts)
+    opciones = [strategy: :one_for_one, name: Chat.SupervisorPrincipal]
+    Supervisor.start_link(hijos, opciones)
   end
 end
