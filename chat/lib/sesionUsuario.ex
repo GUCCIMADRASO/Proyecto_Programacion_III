@@ -3,7 +3,7 @@ defmodule SesionUsuario do
 
   # Estado: %{usuario_id: id, sala: nil | nombre, pid: self()}
 
-  def iniciar_enlace(usuario_id) do
+  def start_link(usuario_id) do
     GenServer.start_link(__MODULE__, %{usuario_id: usuario_id, sala: nil, pid: self()}, name: tupla_via(usuario_id))
   end
 

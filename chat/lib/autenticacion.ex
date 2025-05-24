@@ -18,8 +18,10 @@ defmodule Autenticacion do
 
   # Inicialización de ETS
 
-  def iniciar_enlace do
-    :ets.new(:tabla_autenticacion, [:named_table, :public, :set])
+  def start_link do
+    unless :ets.whereis(:tabla_autenticacion) != :undefined do
+      :ets.new(:tabla_autenticacion, [:named_table, :public, :set])
+    end
     {:ok, self()}
   end
 end

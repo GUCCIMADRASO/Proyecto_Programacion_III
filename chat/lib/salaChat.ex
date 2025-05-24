@@ -3,13 +3,17 @@ defmodule SalaChat do
 
   # Estado: %{nombre: nombre, usuarios: MapSet.new(), historial: []}
 
-  def iniciar_enlace(nombre) do
+  def start_link(nombre) do
     GenServer.start_link(__MODULE__, %{nombre: nombre, usuarios: MapSet.new(), historial: []}, name: tupla_via(nombre))
   end
 
   defp tupla_via(nombre), do: {:via, Registry, {RegistroSalaChat, nombre}}
 
-  def init(estado), do: {:ok, estado}
+  def init(estado) do
+    # Suscribirse al canal de la sala
+    Phoenix.PubSub.subscribe(Chat.PubSub, "sala:#{estado.nombre}")
+    {:ok, estado}
+  end
 
   # API pública
 
@@ -22,6 +26,8 @@ defmodule SalaChat do
   end
 
   def enviar_mensaje(nombre_sala, usuario_id, mensaje) do
+    # Publicar el mensaje en el canal de la sala
+    Phoenix.PubSub.broadcast(Chat.PubSub, "sala:#{nombre_sala}", {usuario_id, mensaje})
     GenServer.call(tupla_via(nombre_sala), {:enviar_mensaje, usuario_id, mensaje})
   end
 
@@ -31,6 +37,18 @@ defmodule SalaChat do
 
   def obtener_historial(nombre_sala) do
     GenServer.call(tupla_via(nombre_sala), :obtener_historial)
+  end
+
+  def buscar_en_historial(nombre_sala, termino) do
+    # Leer el archivo de historial de la sala
+    archivo = "historial_#{nombre_sala}.txt"
+    if File.exists?(archivo) do
+      File.stream!(archivo)
+      |> Enum.filter(fn linea -> String.contains?(linea, termino) end)
+      |> Enum.map(&String.trim/1)
+    else
+      {:error, :archivo_no_encontrado}
+    end
   end
 
   # Callbacks
@@ -61,5 +79,10 @@ defmodule SalaChat do
 
   def handle_call(:obtener_historial, _from, estado) do
     {:reply, Enum.reverse(estado.historial), estado}
+  end
+
+  def handle_info({usuario_id, mensaje}, estado) do
+    IO.puts("Nuevo mensaje en sala #{estado.nombre} de #{usuario_id}: #{mensaje}")
+    {:noreply, estado}
   end
 end
